@@ -27,17 +27,20 @@ Vec3 random_unit_vector();
 Color3 ray_color(Ray& r);
 Color3 ray_color(Ray& r, HittableList& world, int depth);
 void initHittables(std::vector<Hittable*>& list);
+void initHittablesName(std::vector<Hittable*>& list);
 void releaseHittables(std::vector<Hittable*>& list);
 void image1(uint8_t* data, std::string& text);
 void image2(uint8_t* data, std::string& text);
 void image3(uint8_t* data, std::string& text, HittableList& list);
+
 void writePPM(const char* data, size_t len, std::string name);
 void writePNG(void* data, std::string name);
 double hit_sphere( Vec3& center, double radius,  Ray& r);
 int main()
 {
     std::vector<Hittable*> hittables;
-    initHittables(hittables);
+    //initHittables(hittables);
+    initHittablesName(hittables);
     HittableList world(hittables);
     uint8_t* data = new uint8_t[(IMAGE_WIDTH * IMAGE_HEIGHT)*3];
     
@@ -143,6 +146,10 @@ void image3(uint8_t* data, std::string& text, HittableList& list)
 
     std::cerr << "\nDone.\n";
 }
+
+
+
+
 
 void writePPM(const char* data, size_t len, std::string name)
 {
@@ -257,6 +264,54 @@ void initHittables(std::vector<Hittable*>& list)
     auto material3 = std::make_shared<Metal>(Color3(0.7, 0.6, 0.5));
     Hittable* h5 = new Sphere(Vec3(4, 1, 0), 1.0, material3);
     list.push_back(h5);
+}
+
+void initHittablesName(std::vector<Hittable*>& list)
+{
+    auto ground_material = std::make_shared<Lambertian>(Color3(0.5, 0.5, 0.5));
+    Hittable* h = new Sphere(Vec3(0, -1000, 0), 1000, ground_material);
+    list.push_back(h);
+   
+    double xyarr[16][3] = { {0,0,0},{0,0.4,0.4},{0,0.8,0.4},{0,0.12,0.4},{0,0.16,0.4},{0.4,0,0.4},{0.4,0.4,0.4},{0.4,0.8,0}
+    ,{0.4,0.16,0} ,{0.12,0.16,0} ,{0.16,0.16,0} ,{0.16,0.12,0} ,{0.16,0.8,0} ,{0.16,0.4,0} ,{0.12,0.2,0} ,{0.8,0.4,0} };
+    int c = 0;
+    for (int a = -2; a < 2; a++) {
+        for (int b = -2; b < 2; b++) {
+            auto choose_mat = random_double();
+            Vec3 center(xyarr[c][0]+a*2, xyarr[c][1],xyarr[c][1]+b*2 );
+            c++;
+            std::shared_ptr<Material> sphere_material;
+            center = center;
+            if (choose_mat < 0.8) {
+                // diffuse
+                auto albedo = Color3::random() * Color3::random();
+                sphere_material = std::make_shared<Lambertian>(albedo);
+                Hittable* h2 = new Sphere(center, 0.2, sphere_material);
+                list.push_back(h2);
+            }
+            else if (choose_mat < 0.95) {
+                // metal
+                auto albedo = Color3::random(0.5, 1);
+                sphere_material = std::make_shared<Metal>(albedo);
+                Hittable* h2 = new Sphere(center, 0.2, sphere_material);
+                list.push_back(h2);
+            }
+            else {
+                // glass
+                sphere_material = std::make_shared<Dielectric>(1.5);
+                Hittable* h2 = new Sphere(center, 0.2, sphere_material);
+                list.push_back(h2);
+            }
+            if ((center - Vec3(4, 0.2, 0)).length() > 0.9) {
+                
+            }
+        }
+    }
+    
+    auto material1 = std::make_shared<Dielectric>(1.5);
+    Hittable* h3 = new Sphere(Vec3(0, 1, 0), 1.0, material1);
+    list.push_back(h3);
+   
 }
 
 Vec3 random_in_unit_sphere() {
